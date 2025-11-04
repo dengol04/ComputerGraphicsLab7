@@ -150,5 +150,77 @@ namespace PlatonicSolids
 
             return new Polyhedron(vertices, polygons);
         }
+
+        public Vector3 GetCenter()
+        {
+            double totalX = 0, totalY = 0, totalZ = 0;
+            foreach (var vertex in Vertices)
+            {
+                totalX += vertex.X;
+                totalY += vertex.Y;
+                totalZ += vertex.Z;
+            }
+            int vertexCount = Vertices.Count;
+            return new Vector3(totalX / vertexCount, totalY / vertexCount, totalZ / vertexCount);
+        }
+
+        public void ApplyTransform(Matrix4x4 transform)
+        {
+            for (int i = 0; i < Vertices.Count; i++)
+            {
+                Vertices[i] = transform.Transform(Vertices[i]);
+            }
+        }
+
+        public static Polyhedron CreateRevolution(List<Vector3> generatingCurve, char axis, int segments)
+        {
+            var vertices = new List<Vector3>();
+            var polygons = new List<Polygon>();
+            double angleStep = 2 * Math.PI / segments; 
+
+            for (int i = 0; i < segments; i++)
+            {
+                double currentAngle = i * angleStep;
+                Matrix4x4 rotationMatrix;
+
+                switch (char.ToUpper(axis))
+                {
+                    case 'X':
+                        rotationMatrix = Matrix4x4.CreateRotationX(currentAngle);
+                        break;
+                    case 'Y':
+                        rotationMatrix = Matrix4x4.CreateRotationY(currentAngle);
+                        break;
+                    case 'Z':
+                        rotationMatrix = Matrix4x4.CreateRotationZ(currentAngle);
+                        break;
+                    default:
+                        throw new ArgumentException("Неверно указана ось вращения");
+                }
+
+                foreach (var point in generatingCurve)
+                {
+                    vertices.Add(rotationMatrix.Transform(point));
+                }
+            }
+
+            int curvePointsCount = generatingCurve.Count;
+            for (int i = 0; i < segments; i++)
+            {
+                for (int j = 0; j < curvePointsCount - 1; j++)
+                {
+                    int idx1 = i * curvePointsCount + j;
+                    int idx2 = i * curvePointsCount + (j + 1);
+
+                    int next_i = (i + 1) % segments;
+                    int idx3 = next_i * curvePointsCount + (j + 1);
+                    int idx4 = next_i * curvePointsCount + j;
+
+                    polygons.Add(new Polygon(new int[] { idx1, idx2, idx3, idx4 }));
+                }
+            }
+
+            return new Polyhedron(vertices, polygons);
+        }
     }
 }
