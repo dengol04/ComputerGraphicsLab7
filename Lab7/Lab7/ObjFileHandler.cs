@@ -72,7 +72,41 @@ namespace PlatonicSolids
                 throw new Exception("OBJ файл не содержит вершин.");
             }
 
-            return new Polyhedron(vertices, polygons);
+            double minX = vertices.Min(v => v.X);
+            double maxX = vertices.Max(v => v.X);
+            double minY = vertices.Min(v => v.Y);
+            double maxY = vertices.Max(v => v.Y);
+            double minZ = vertices.Min(v => v.Z);
+            double maxZ = vertices.Max(v => v.Z);
+
+            double centerX = (minX + maxX) / 2.0;
+            double centerY = (minY + maxY) / 2.0;
+            double centerZ = (minZ + maxZ) / 2.0;
+
+            double scaleX = maxX - minX;
+            double scaleY = maxY - minY;
+            double scaleZ = maxZ - minZ;
+
+            double maxDimension = Math.Max(scaleX, Math.Max(scaleY, scaleZ));
+
+            double targetSize = 2.0;
+            double scaleFactor = targetSize / maxDimension;
+
+            var normalizedVertices = new List<Vector3>();
+            foreach (var v in vertices)
+            {
+                double newX = v.X - centerX;
+                double newY = v.Y - centerY;
+                double newZ = v.Z - centerZ;
+
+                newX *= scaleFactor;
+                newY *= scaleFactor;
+                newZ *= scaleFactor;
+
+                normalizedVertices.Add(new Vector3(newX, newY, newZ));
+            }
+
+            return new Polyhedron(normalizedVertices, polygons);
         }
 
         public static void SaveToObj(Polyhedron polyhedron, string filePath)
